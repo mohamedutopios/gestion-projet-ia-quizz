@@ -1,0 +1,22 @@
+services:
+  quiz:
+    build: .
+    image: quiz-gestion-projet-ia:latest
+    container_name: quiz-gestion-projet-ia
+    ports:
+      - "9091:9090"              # 9091 côté hôte : cohabite avec le quiz adoption (9090)
+    environment:
+      # Compte administrateur (créé/promu au démarrage). Modifiable ici.
+      ADMIN_USER: "mohamed1780"
+      ADMIN_PASSWORD: "MOHmoh1780@"
+    volumes:
+      - quiz-gp-data:/data       # persiste comptes + résultats entre redémarrages
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://127.0.0.1:9090/healthz').read()==b'ok' else sys.exit(1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  quiz-gp-data:

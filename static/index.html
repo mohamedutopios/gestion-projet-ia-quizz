@@ -1,0 +1,510 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quiz — Gestion de projet IA</title>
+<style>
+:root{
+  --bg:#0b1220; --bg2:#0e1626; --surface:#151f30; --surface2:#1b2941; --card-brd:#243349;
+  --ink:#eef3f8; --muted:#93a4b8; --line:#28374d;
+  --brand:#5b9dff; --brand2:#8b6cff; --brand-d:#2b64c4;
+  --ok:#34c76a; --ok-d:#1f8a49; --bad:#ff5d6c; --gold:#f2c94c;
+  --grad:linear-gradient(135deg,#5b9dff 0%,#8b6cff 100%);
+  --shadow:0 10px 30px rgba(0,0,0,.35); --shadow-sm:0 4px 14px rgba(0,0,0,.25);
+  --radius:16px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;color:var(--ink);
+  font:16px/1.55 "Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:
+    radial-gradient(1100px 600px at 12% -8%, rgba(91,157,255,.16), transparent 60%),
+    radial-gradient(900px 520px at 100% 0%, rgba(139,108,255,.14), transparent 55%),
+    var(--bg);
+  background-attachment:fixed;
+}
+::selection{background:rgba(91,157,255,.35)}
+a{color:var(--brand);text-decoration:none}
+.wrap{max-width:900px;margin:0 auto;padding:22px 18px 70px}
+.wrap.wide{max-width:1120px}
+
+/* top bar */
+.topbar{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);
+  background:rgba(11,18,32,.72);border-bottom:1px solid var(--line)}
+.topbar .in{max-width:1120px;margin:0 auto;padding:12px 18px;display:flex;align-items:center;gap:12px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.2px}
+.logo .mark{width:30px;height:30px;border-radius:9px;background:var(--grad);display:grid;place-items:center;
+  font-size:15px;box-shadow:var(--shadow-sm)}
+.logo small{display:block;font-weight:500;color:var(--muted);font-size:11px;letter-spacing:.3px}
+.sp{flex:1}
+.chip{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--card-brd);
+  border-radius:30px;padding:5px 12px 5px 6px;font-size:13.5px}
+.avatar{width:24px;height:24px;border-radius:50%;background:var(--grad);display:grid;place-items:center;
+  font-size:12px;font-weight:700;color:#fff}
+.chip.admin{border-color:var(--brand)}
+.btn{cursor:pointer;border:0;border-radius:11px;padding:11px 16px;font-size:14.5px;font-weight:600;
+  background:var(--grad);color:#fff;box-shadow:var(--shadow-sm);transition:transform .08s ease,filter .15s}
+.btn:hover{filter:brightness(1.06)} .btn:active{transform:translateY(1px)}
+.btn.sec{background:var(--surface2);color:var(--ink);border:1px solid var(--card-brd);box-shadow:none}
+.btn.ghost{background:transparent;color:var(--muted);box-shadow:none;padding:8px 10px}
+.btn.ghost:hover{color:var(--ink)}
+.btn.sm{padding:7px 11px;font-size:13px;border-radius:9px}
+.btn.danger{background:linear-gradient(135deg,#ff5d6c,#c0392b)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.card{background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--card-brd);
+  border-radius:var(--radius);padding:24px;box-shadow:var(--shadow);margin:0 0 18px}
+h2{margin:0 0 6px;font-size:22px;letter-spacing:-.2px}
+h3{margin:0;font-size:16px}
+.sub{color:var(--muted);margin:2px 0 18px}
+.mut{color:var(--muted)} .sm{font-size:13.5px}
+
+label{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px;font-weight:500}
+input{width:100%;padding:13px 14px;background:var(--bg2);border:1px solid var(--card-brd);border-radius:12px;
+  color:var(--ink);font-size:15px;transition:border-color .15s,box-shadow .15s}
+input:focus{outline:0;border-color:var(--brand);box-shadow:0 0 0 3px rgba(91,157,255,.18)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.err{background:rgba(255,93,108,.12);border:1px solid rgba(255,93,108,.5);color:#ffb3ba;border-radius:11px;
+  padding:11px 13px;margin:12px 0 0;font-size:14px}
+
+/* auth */
+.auth-hero{text-align:center;margin:36px 0 18px}
+.auth-hero .mark{width:56px;height:56px;border-radius:16px;margin:0 auto 14px;background:var(--grad);
+  display:grid;place-items:center;font-size:26px;box-shadow:var(--shadow)}
+.auth-hero h1{font-size:26px;margin:0 0 6px;letter-spacing:-.4px}
+.auth-hero p{color:var(--muted);max-width:52ch;margin:0 auto}
+.seg{display:flex;background:var(--bg2);border:1px solid var(--card-brd);border-radius:12px;padding:4px;margin:4px 0 6px}
+.seg button{flex:1;border:0;background:transparent;color:var(--muted);padding:10px;border-radius:9px;
+  font-weight:600;font-size:14px;cursor:pointer}
+.seg button.active{background:var(--grad);color:#fff;box-shadow:var(--shadow-sm)}
+
+/* module grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.module{position:relative;background:linear-gradient(180deg,var(--surface),var(--bg2));
+  border:1px solid var(--card-brd);border-radius:var(--radius);padding:18px;overflow:hidden;
+  transition:transform .1s ease,border-color .15s}
+.module:hover{transform:translateY(-2px);border-color:var(--brand)}
+.module .accent{position:absolute;inset:0 0 auto 0;height:4px;background:var(--grad)}
+.module .num{font-size:12px;font-weight:700;color:var(--muted);letter-spacing:.12em}
+.module h3{margin:8px 0 4px;font-size:16px;line-height:1.3}
+.module .meta{color:var(--muted);font-size:13px;margin-bottom:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border-radius:20px;
+  border:1px solid var(--card-brd);color:var(--muted)}
+.pill.done{color:var(--ok);border-color:rgba(52,199,106,.5);background:rgba(52,199,106,.1)}
+.module .foot{display:flex;gap:8px;margin-top:14px}
+
+/* quiz */
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.progress{height:8px;background:var(--bg2);border-radius:6px;overflow:hidden;margin:6px 0 20px;border:1px solid var(--card-brd)}
+.progress>div{height:100%;background:var(--grad);border-radius:6px;transition:width .25s ease}
+.clock{min-width:64px;text-align:center;font-weight:800;font-size:20px;padding:4px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--card-brd);font-variant-numeric:tabular-nums}
+.clock.low{background:#fde8e8;border-color:#e5b4b4;color:#b42318}
+.tbar{height:5px;margin:0 0 16px}
+.tbar>div{transition:width .1s linear}
+.tbar>div.low{background:#d92d20}
+.q{font-weight:600;font-size:18px;margin:0 0 14px;line-height:1.4}
+.opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--bg2);
+  border:1px solid var(--card-brd);color:var(--ink);border-radius:13px;padding:14px 15px;margin:10px 0;
+  font-size:15px;cursor:pointer;transition:border-color .12s,background .12s,transform .06s}
+.opt:hover{border-color:var(--brand)} .opt:active{transform:scale(.995)}
+.opt .lt{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:700;
+  background:var(--surface2);border:1px solid var(--card-brd);color:var(--muted);font-size:14px}
+.opt.sel{border-color:var(--brand);background:rgba(91,157,255,.14)}
+.opt.sel .lt{background:var(--grad);color:#fff;border-color:transparent}
+.opt.good{border-color:var(--ok);background:rgba(52,199,106,.13)}
+.opt.good .lt{background:var(--ok);color:#fff;border-color:transparent}
+.opt.wrong{border-color:var(--bad);background:rgba(255,93,108,.12)}
+.opt.wrong .lt{background:var(--bad);color:#fff;border-color:transparent}
+.opt .tag{margin-left:auto;font-size:12px;font-weight:600;color:var(--muted)}
+.navbar{display:flex;align-items:center;justify-content:space-between;margin-top:18px}
+
+/* result */
+.result-top{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.donut{--p:0;width:120px;height:120px;border-radius:50%;flex:none;display:grid;place-items:center;
+  background:conic-gradient(var(--ok) calc(var(--p)*1%), var(--surface2) 0);}
+.donut .in{width:88px;height:88px;border-radius:50%;background:var(--bg2);display:grid;place-items:center;
+  border:1px solid var(--card-brd)}
+.donut b{font-size:26px} .donut small{color:var(--muted);font-size:12px}
+.corr{margin:0 0 22px}
+.explain{font-size:14px;color:var(--muted);border-left:3px solid var(--brand-d);padding:9px 13px;margin:10px 0 0;
+  background:var(--bg2);border-radius:0 10px 10px 0}
+
+/* leaderboard */
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+tr.me{background:rgba(91,157,255,.10)}
+.rank{font-weight:700} .rank.r1{color:var(--gold)} .rank.r2{color:#cbd5e1} .rank.r3{color:#e0a06a}
+
+/* admin */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px}
+.stat{background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--card-brd);
+  border-radius:14px;padding:16px}
+.stat .v{font-size:28px;font-weight:800;letter-spacing:-.5px}
+.stat .k{color:var(--muted);font-size:13px;margin-top:2px}
+.scorecell{display:inline-grid;place-items:center;min-width:42px;padding:4px 8px;border-radius:8px;font-weight:700;
+  font-size:13px;border:1px solid var(--card-brd)}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar input{max-width:260px}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.tablewrap table{min-width:640px}
+td .btn.sm{margin-right:4px}
+.center{text-align:center}
+@media(max-width:560px){ .card{padding:18px} h2{font-size:20px} .q{font-size:16px} }
+</style>
+</head>
+<body>
+<div class="topbar"><div class="in">
+  <div class="logo"><span class="mark">✦</span><span>Quiz Gestion de projet IA<small>Cadrer · expérimenter · piloter</small></span></div>
+  <span class="sp"></span>
+  <span id="who" class="chip" hidden></span>
+  <button id="logout" class="btn ghost" hidden>Déconnexion</button>
+</div></div>
+<div id="app" class="wrap"></div>
+
+<script>
+const API="";
+let TOKEN=localStorage.getItem("quiz_token")||"";
+let USER=localStorage.getItem("quiz_user")||"";
+let ADMIN=localStorage.getItem("quiz_admin")==="1";
+const app=document.getElementById("app");
+const el=(h)=>{const d=document.createElement("div");d.innerHTML=h.trim();return d.firstChild;};
+const esc=(s)=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const initial=(s)=>(s||"?").trim().charAt(0).toUpperCase();
+const fmtDate=(ts)=>new Date(ts*1000).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"});
+
+async function api(path,opts={}){
+  opts.headers=Object.assign({"Content-Type":"application/json"},opts.headers||{});
+  if(TOKEN) opts.headers["Authorization"]="Bearer "+TOKEN;
+  const r=await fetch(API+path,opts);
+  if(r.status===204) return {};
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(data.error||("Erreur "+r.status));
+  return data;
+}
+function setSession(u,t,adm){ USER=u;TOKEN=t;ADMIN=!!adm;
+  localStorage.setItem("quiz_user",u);localStorage.setItem("quiz_token",t);localStorage.setItem("quiz_admin",adm?"1":"0");
+  refreshHeader(); }
+function clearSession(){ USER=TOKEN="";ADMIN=false;
+  localStorage.removeItem("quiz_user");localStorage.removeItem("quiz_token");localStorage.removeItem("quiz_admin");
+  refreshHeader(); }
+function refreshHeader(){
+  const w=document.getElementById("who"),lo=document.getElementById("logout");
+  if(USER){ w.innerHTML=`<span class="avatar">${esc(initial(USER))}</span>${esc(USER)}${ADMIN?' · admin':''}`;
+    w.classList.toggle("admin",ADMIN); w.hidden=false; lo.hidden=false; }
+  else{ w.hidden=true; lo.hidden=true; }
+}
+document.getElementById("logout").onclick=()=>{clearSession();app.className="wrap";viewAuth();};
+
+/* ---------- Auth ---------- */
+function viewAuth(mode="register"){
+  app.className="wrap"; app.innerHTML="";
+  app.appendChild(el(`<div class="auth-hero">
+    <div class="mark">✦</div>
+    <h1>Quiz de gestion de projet IA</h1>
+    <p>Créez un compte pour passer les quiz de la formation. Nom d'utilisateur unique ·
+       chaque quiz se passe <b>une seule fois</b>.</p></div>`));
+  const c=el(`<div class="card" style="max-width:440px;margin:0 auto">
+    <div class="seg"><button data-m="register">Créer un compte</button><button data-m="login">Se connecter</button></div>
+    <div id="fz"></div></div>`);
+  app.appendChild(c);
+  const draw=(m)=>{
+    c.querySelectorAll(".seg button").forEach(b=>b.classList.toggle("active",b.dataset.m===m));
+    c.querySelector("#fz").innerHTML=`
+      <label>Nom d'utilisateur</label>
+      <input id="u" autocomplete="username" placeholder="ex. marie.d" maxlength="30">
+      <label>Mot de passe</label>
+      <input id="p" type="password" autocomplete="${m==='register'?'new-password':'current-password'}" placeholder="••••••••">
+      <div id="err"></div>
+      <div class="row" style="margin-top:16px"><button id="go" class="btn" style="flex:1">${m==='register'?'Créer mon compte':'Se connecter'}</button></div>`;
+    const err=c.querySelector("#err");
+    const go=async()=>{ err.innerHTML="";
+      try{ const d=await api("/api/"+m,{method:"POST",body:JSON.stringify(
+              {username:c.querySelector("#u").value.trim(),password:c.querySelector("#p").value})});
+        setSession(d.username,d.token,d.is_admin); route();
+      }catch(e){ err.innerHTML=`<div class="err">${esc(e.message)}</div>`; } };
+    c.querySelector("#go").onclick=go;
+    c.querySelector("#p").onkeydown=(e)=>{if(e.key==="Enter")go();};
+    c.querySelector("#u").onkeydown=(e)=>{if(e.key==="Enter")c.querySelector("#p").focus();};
+  };
+  c.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>draw(b.dataset.m));
+  draw(mode);
+}
+
+function route(){ if(ADMIN) viewAdmin(); else viewHome(); }
+
+/* ---------- Home ---------- */
+async function viewHome(){
+  app.className="wrap";
+  app.innerHTML=`<div class="card"><p class="mut">Chargement…</p></div>`;
+  let data; try{ data=await api("/api/quizzes"); }catch(e){ clearSession(); return viewAuth(); }
+  const c=el(`<div>
+    <div class="card"><h2>Les quiz de la formation</h2>
+      <p class="sub">20 questions par module · 12 secondes par question, sans retour en arrière. À la fin : votre score, les bonnes réponses et les explications.</p>
+      <div class="grid" id="grid"></div>
+    </div></div>`);
+  const g=c.querySelector("#grid");
+  data.quizzes.forEach((q,idx)=>{
+    const it=el(`<div class="module"><div class="accent"></div>
+      <div class="num">MODULE ${idx+1}</div>
+      <h3>${esc(q.title.replace(/^Module\s*\d+\s*[—-]\s*/,''))}</h3>
+      <div class="meta">${q.count} questions</div>
+      <span class="pill ${q.done?'done':''}">${q.done?'✓ Terminé':'À faire'}</span>
+      <div class="foot">
+        <button class="btn sm ${q.done?'sec':''}" data-go style="flex:1">${q.done?'Voir la correction':'Commencer'}</button>
+        <button class="btn sm sec" data-lb>Classement</button>
+      </div></div>`);
+    it.querySelector("[data-go]").onclick=()=>openQuiz(q.id);
+    it.querySelector("[data-lb]").onclick=()=>viewLeaderboard(q.id);
+    g.appendChild(it);
+  });
+  app.innerHTML=""; app.appendChild(c);
+}
+
+/* ---------- Quiz ---------- */
+async function openQuiz(qid){
+  app.className="wrap"; app.innerHTML=`<div class="card"><p class="mut">Chargement…</p></div>`;
+  let data; try{ data=await api("/api/quiz/"+qid); }catch(e){ return route(); }
+  if(data.done) return viewResult(data.result);
+  runQuiz(data.quiz);
+}
+function runQuiz(quiz){
+  const TIME=12;                       // secondes par question
+  const answers=new Array(quiz.questions.length).fill(-1);
+  let i=0, timer=null, leftMs=0, submitting=false;
+
+  /* ecran d'intro : le chrono ne demarre qu'au clic */
+  const intro=el(`<div class="card">
+    <h2 style="font-size:18px">${esc(quiz.title)}</h2>
+    <p class="mut" style="margin:10px 0 4px">${quiz.questions.length} questions · <b>${TIME} secondes par question</b>.</p>
+    <p class="mut" style="margin:0 0 14px">À la fin du temps, la question suivante s'affiche automatiquement —
+      sans réponse enregistrée si vous n'avez pas choisi. <b>Aucun retour en arrière</b> n'est possible.</p>
+    <div class="navbar"><span></span><button id="start" class="btn">Commencer →</button></div></div>`);
+  app.innerHTML=""; app.appendChild(intro);
+  intro.querySelector("#start").onclick=begin;
+
+  let qzone,pbar,pos,next,err,clock,tfill;
+  function begin(){
+    const c=el(`<div class="card">
+      <div class="qhead"><h2 style="font-size:18px">${esc(quiz.title)}</h2><span class="clock" id="clock">${TIME}</span></div>
+      <div class="qhead"><span id="pos" class="mut sm"></span><span class="mut sm">Pas de retour en arrière</span></div>
+      <div class="progress"><div id="pbar"></div></div>
+      <div class="progress tbar"><div id="tfill" style="width:100%"></div></div>
+      <div id="qzone"></div><div id="err"></div>
+      <div class="navbar"><span></span><button id="next" class="btn">Valider →</button></div></div>`);
+    app.innerHTML=""; app.appendChild(c);
+    qzone=c.querySelector("#qzone"); pbar=c.querySelector("#pbar"); pos=c.querySelector("#pos");
+    next=c.querySelector("#next"); err=c.querySelector("#err");
+    clock=c.querySelector("#clock"); tfill=c.querySelector("#tfill");
+    next.onclick=()=>{ if(answers[i]===-1){err.innerHTML=`<div class="err">Choisissez une réponse — ou laissez le temps s'écouler.</div>`;return;} advance(); };
+    show();
+  }
+  function renderOptions(){
+    const q=quiz.questions[i];
+    qzone.innerHTML=`<p class="q">${esc(q.q)}</p>`;
+    q.options.forEach((o,idx)=>{
+      const b=el(`<button class="opt ${answers[i]===idx?'sel':''}"><span class="lt">${"ABCD"[idx]}</span><span>${esc(o)}</span></button>`);
+      b.onclick=()=>{answers[i]=idx;renderOptions();}; qzone.appendChild(b);
+    });
+  }
+  function show(){
+    err.innerHTML="";
+    pbar.style.width=(i/quiz.questions.length*100)+"%";
+    pos.textContent=`Question ${i+1} / ${quiz.questions.length}`;
+    next.textContent=(i===quiz.questions.length-1)?"Terminer ✓":"Valider →";
+    renderOptions();
+    leftMs=TIME*1000;
+    paint();
+    clearInterval(timer);
+    timer=setInterval(()=>{ leftMs-=100; paint(); if(leftMs<=0) advance(); },100);
+  }
+  function paint(){
+    const sLeft=Math.max(0,Math.ceil(leftMs/1000));
+    clock.textContent=sLeft;
+    const low=leftMs<=3000;
+    clock.classList.toggle("low",low); tfill.classList.toggle("low",low);
+    tfill.style.width=Math.max(0,leftMs/(TIME*1000)*100)+"%";
+  }
+  function advance(){
+    clearInterval(timer);
+    if(i<quiz.questions.length-1){ i++; show(); } else { submitAll(); }
+  }
+  async function submitAll(){
+    if(submitting) return; submitting=true;
+    app.innerHTML=""; app.appendChild(el(`<div class="card"><p class="mut">Envoi de vos réponses…</p></div>`));
+    try{
+      const d=await api("/api/quiz/"+quiz.id+"/submit",{method:"POST",body:JSON.stringify({answers})});
+      viewResult(d.result);
+    }catch(e){
+      submitting=false;
+      const c=el(`<div class="card"><div class="err">${esc(e.message)}</div>
+        <div class="navbar"><span></span><button class="btn" id="retry">Réessayer l'envoi</button></div></div>`);
+      app.innerHTML=""; app.appendChild(c);
+      c.querySelector("#retry").onclick=submitAll;
+    }
+  }
+}
+
+/* ---------- Result ---------- */
+function viewResult(res){
+  app.className="wrap";
+  const pct=Math.round(res.score/res.total*100);
+  const c=el(`<div class="card">
+    <div class="result-top">
+      <div class="donut" style="--p:${pct}"><div class="in"><div class="center"><b>${res.score}/${res.total}</b><br><small>${pct}%</small></div></div></div>
+      <div style="flex:1;min-width:200px">
+        <h2>${esc(res.title)}</h2>
+        <p class="sub" style="margin-bottom:12px">Quiz terminé. Voici votre corrigé détaillé ci-dessous.</p>
+        <div class="row">
+          <button data-lb class="btn sec">Voir le classement</button>
+          <button data-home class="btn ghost">← Retour aux quiz</button>
+        </div>
+      </div>
+    </div></div>`);
+  const corr=el(`<div class="card"><h2>Corrigé détaillé</h2><div id="cz" style="margin-top:14px"></div></div>`);
+  const cz=corr.querySelector("#cz");
+  res.corrections.forEach((it,n)=>{
+    const block=el(`<div class="corr"><p class="q" style="font-size:15px">${n+1}. ${esc(it.q)}</p><div class="opts"></div>
+      <p class="explain">${esc(it.explain)}</p></div>`);
+    const ob=block.querySelector(".opts");
+    it.options.forEach((o,idx)=>{
+      let cls="opt";
+      if(idx===it.correct)cls+=" good"; else if(idx===it.your)cls+=" wrong";
+      const tag=idx===it.correct?'<span class="tag">✓ bonne réponse</span>':(idx===it.your?'<span class="tag">✗ votre réponse</span>':'');
+      ob.appendChild(el(`<div class="${cls}"><span class="lt">${"ABCD"[idx]}</span><span>${esc(o)}</span>${tag}</div>`));
+    });
+    cz.appendChild(block);
+  });
+  c.querySelector("[data-home]").onclick=route;
+  c.querySelector("[data-lb]").onclick=()=>viewLeaderboard(res.quiz_id);
+  app.innerHTML=""; app.appendChild(c); app.appendChild(corr);
+}
+
+/* ---------- Leaderboard ---------- */
+async function viewLeaderboard(qid){
+  app.className="wrap"; app.innerHTML=`<div class="card"><p class="mut">Chargement…</p></div>`;
+  const d=await api("/api/quiz/"+qid+"/leaderboard");
+  const c=el(`<div class="card"><h2>Classement</h2><p class="sub">${esc(d.title)}</p><div id="tz"></div>
+    <div class="row" style="margin-top:16px"><button data-home class="btn ghost">← Retour</button></div></div>`);
+  const tz=c.querySelector("#tz");
+  if(!d.leaderboard.length){ tz.innerHTML=`<p class="mut">Personne n'a encore passé ce quiz.</p>`; }
+  else{
+    const rows=d.leaderboard.map(r=>{
+      const medal=r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':'';
+      return `<tr class="${r.username===USER?'me':''}">
+        <td class="rank r${r.rank}">${medal||r.rank}</td>
+        <td><span class="avatar" style="display:inline-grid;vertical-align:middle;margin-right:8px">${esc(initial(r.username))}</span>${esc(r.username)}</td>
+        <td><b>${r.score}</b> <span class="mut">/ ${r.total}</span></td>
+        <td class="mut sm">${fmtDate(r.at)}</td></tr>`;
+    }).join("");
+    tz.innerHTML=`<div class="tablewrap"><table><thead><tr><th>#</th><th>Utilisateur</th><th>Score</th><th>Passé le</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  }
+  c.querySelector("[data-home]").onclick=route;
+  app.innerHTML=""; app.appendChild(c);
+}
+
+/* ---------- Admin ---------- */
+function scoreColor(s,t){ const p=s/t;
+  if(p>=0.8) return 'color:#7ee2a2;border-color:rgba(52,199,106,.5);background:rgba(52,199,106,.12)';
+  if(p>=0.5) return 'color:#f2c94c;border-color:rgba(242,201,76,.5);background:rgba(242,201,76,.10)';
+  return 'color:#ffb3ba;border-color:rgba(255,93,108,.5);background:rgba(255,93,108,.10)'; }
+
+async function viewAdmin(){
+  app.className="wrap wide";
+  app.innerHTML=`<div class="card"><p class="mut">Chargement…</p></div>`;
+  let d; try{ d=await api("/api/admin/data"); }catch(e){ app.innerHTML=`<div class="card"><div class="err">${esc(e.message)}</div></div>`; return; }
+  const c=el(`<div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div><h2>Tableau de bord administrateur</h2><p class="sub" style="margin:2px 0 0">Suivi des apprenants et des résultats</p></div>
+        <button id="reload" class="btn sec sm">↻ Rafraîchir</button>
+      </div>
+      <div class="stats" id="stats"></div>
+    </div>
+    <div class="card">
+      <div class="toolbar">
+        <input id="search" placeholder="🔎 Filtrer par nom d'utilisateur…">
+        <span class="sp"></span>
+        <button id="csv" class="btn sec sm">⤓ Exporter en CSV</button>
+      </div>
+      <div class="tablewrap"><table id="tbl"></table></div>
+      <p class="mut sm" style="margin-top:12px">Astuce : « Réinit. » efface la tentative d'un apprenant pour qu'il puisse repasser le module.</p>
+    </div></div>`);
+
+  // stats
+  const st=c.querySelector("#stats");
+  st.appendChild(el(`<div class="stat"><div class="v">${d.totals.users}</div><div class="k">Apprenants inscrits</div></div>`));
+  st.appendChild(el(`<div class="stat"><div class="v">${d.totals.attempts}</div><div class="k">Quiz passés (total)</div></div>`));
+  d.quizzes.forEach((q,idx)=>{
+    st.appendChild(el(`<div class="stat"><div class="v">${q.avg==null?'—':q.avg}<span class="mut" style="font-size:15px">/${q.count}</span></div>
+      <div class="k">Moy. M${idx+1} · ${q.attempts} passage${q.attempts>1?'s':''}</div></div>`));
+  });
+
+  // table
+  const tbl=c.querySelector("#tbl");
+  const head=`<thead><tr><th>Apprenant</th><th>Inscrit le</th>${d.order.map((q,i)=>`<th class="center">M${i+1}</th>`).join('')}<th class="center">Total</th><th>Actions</th></tr></thead>`;
+  const maxTotal=d.order.length*10;
+  const renderRows=(filter="")=>{
+    const list=d.users.filter(u=>u.username.toLowerCase().includes(filter.toLowerCase()));
+    if(!list.length) return `<tbody><tr><td colspan="${d.order.length+4}" class="center mut" style="padding:22px">Aucun apprenant.</td></tr></tbody>`;
+    const body=list.map(u=>{
+      const cells=d.order.map(qid=>{
+        const r=u.results[qid];
+        if(!r) return `<td class="center mut">—</td>`;
+        return `<td class="center"><span class="scorecell" style="${scoreColor(r.score,r.total)}">${r.score}/${r.total}</span></td>`;
+      }).join('');
+      const totCls=scoreColor(u.total_score,maxTotal||1);
+      return `<tr>
+        <td><span class="avatar" style="display:inline-grid;vertical-align:middle;margin-right:8px">${esc(initial(u.username))}</span>${esc(u.username)}</td>
+        <td class="mut sm">${fmtDate(u.created_at)}</td>
+        ${cells}
+        <td class="center"><span class="scorecell" style="${totCls}">${u.total_score}/${maxTotal}</span></td>
+        <td style="white-space:nowrap">
+          <button class="btn sm sec" data-reset="${esc(u.username)}">Réinit.</button>
+          <button class="btn sm danger" data-del="${esc(u.username)}">Suppr.</button>
+        </td></tr>`;
+    }).join('');
+    return `${head}<tbody>${body}</tbody>`;
+  };
+  const bind=()=>{
+    tbl.querySelectorAll("[data-reset]").forEach(b=>b.onclick=()=>resetUser(b.dataset.reset));
+    tbl.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>delUser(b.dataset.del));
+  };
+  tbl.innerHTML=renderRows(); bind();
+  c.querySelector("#search").oninput=(e)=>{tbl.innerHTML=renderRows(e.target.value);bind();};
+  c.querySelector("#reload").onclick=viewAdmin;
+  c.querySelector("#csv").onclick=exportCsv;
+  app.innerHTML=""; app.appendChild(c);
+}
+async function resetUser(username){
+  const which=prompt(`Réinitialiser pour "${username}" :\n- tapez un module (m1, m2, m3, m4)\n- ou "all" pour tout effacer`,"all");
+  if(!which) return;
+  try{ await api("/api/admin/reset",{method:"POST",body:JSON.stringify({username,quiz_id:which.trim()})}); viewAdmin(); }
+  catch(e){ alert(e.message); }
+}
+async function delUser(username){
+  if(!confirm(`Supprimer définitivement l'apprenant "${username}" et tous ses résultats ?`)) return;
+  try{ await api("/api/admin/delete_user",{method:"POST",body:JSON.stringify({username})}); viewAdmin(); }
+  catch(e){ alert(e.message); }
+}
+async function exportCsv(){
+  const r=await fetch("/api/admin/export.csv",{headers:{"Authorization":"Bearer "+TOKEN}});
+  if(!r.ok){ alert("Export impossible"); return; }
+  const blob=await r.blob(); const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download="resultats-quiz.csv"; a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ---------- start ---------- */
+refreshHeader();
+(async()=>{
+  if(!TOKEN){ viewAuth(); return; }
+  try{ const m=await api("/api/me"); setSession(m.username,TOKEN,m.is_admin); route(); }
+  catch(e){ clearSession(); viewAuth(); }
+})();
+</script>
+</body>
+</html>
