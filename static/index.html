@@ -99,11 +99,6 @@ input:focus{outline:0;border-color:var(--brand);box-shadow:0 0 0 3px rgba(91,157
 .qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
 .progress{height:8px;background:var(--bg2);border-radius:6px;overflow:hidden;margin:6px 0 20px;border:1px solid var(--card-brd)}
 .progress>div{height:100%;background:var(--grad);border-radius:6px;transition:width .25s ease}
-.clock{min-width:64px;text-align:center;font-weight:800;font-size:20px;padding:4px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--card-brd);font-variant-numeric:tabular-nums}
-.clock.low{background:#fde8e8;border-color:#e5b4b4;color:#b42318}
-.tbar{height:5px;margin:0 0 16px}
-.tbar>div{transition:width .1s linear}
-.tbar>div.low{background:#d92d20}
 .q{font-weight:600;font-size:18px;margin:0 0 14px;line-height:1.4}
 .opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--bg2);
   border:1px solid var(--card-brd);color:var(--ink);border-radius:13px;padding:14px 15px;margin:10px 0;
@@ -243,7 +238,7 @@ async function viewHome(){
   let data; try{ data=await api("/api/quizzes"); }catch(e){ clearSession(); return viewAuth(); }
   const c=el(`<div>
     <div class="card"><h2>Les quiz de la formation</h2>
-      <p class="sub">20 questions par module · 12 secondes par question, sans retour en arrière. À la fin : votre score, les bonnes réponses et les explications.</p>
+      <p class="sub">20 questions par module. À la fin : votre score, les bonnes réponses et les explications.</p>
       <div class="grid" id="grid"></div>
     </div></div>`);
   const g=c.querySelector("#grid");
@@ -272,80 +267,40 @@ async function openQuiz(qid){
   runQuiz(data.quiz);
 }
 function runQuiz(quiz){
-  const TIME=12;                       // secondes par question
-  const answers=new Array(quiz.questions.length).fill(-1);
-  let i=0, timer=null, leftMs=0, submitting=false;
-
-  /* ecran d'intro : le chrono ne demarre qu'au clic */
-  const intro=el(`<div class="card">
-    <h2 style="font-size:18px">${esc(quiz.title)}</h2>
-    <p class="mut" style="margin:10px 0 4px">${quiz.questions.length} questions · <b>${TIME} secondes par question</b>.</p>
-    <p class="mut" style="margin:0 0 14px">À la fin du temps, la question suivante s'affiche automatiquement —
-      sans réponse enregistrée si vous n'avez pas choisi. <b>Aucun retour en arrière</b> n'est possible.</p>
-    <div class="navbar"><span></span><button id="start" class="btn">Commencer →</button></div></div>`);
-  app.innerHTML=""; app.appendChild(intro);
-  intro.querySelector("#start").onclick=begin;
-
-  let qzone,pbar,pos,next,err,clock,tfill;
-  function begin(){
-    const c=el(`<div class="card">
-      <div class="qhead"><h2 style="font-size:18px">${esc(quiz.title)}</h2><span class="clock" id="clock">${TIME}</span></div>
-      <div class="qhead"><span id="pos" class="mut sm"></span><span class="mut sm">Pas de retour en arrière</span></div>
-      <div class="progress"><div id="pbar"></div></div>
-      <div class="progress tbar"><div id="tfill" style="width:100%"></div></div>
-      <div id="qzone"></div><div id="err"></div>
-      <div class="navbar"><span></span><button id="next" class="btn">Valider →</button></div></div>`);
-    app.innerHTML=""; app.appendChild(c);
-    qzone=c.querySelector("#qzone"); pbar=c.querySelector("#pbar"); pos=c.querySelector("#pos");
-    next=c.querySelector("#next"); err=c.querySelector("#err");
-    clock=c.querySelector("#clock"); tfill=c.querySelector("#tfill");
-    next.onclick=()=>{ if(answers[i]===-1){err.innerHTML=`<div class="err">Choisissez une réponse — ou laissez le temps s'écouler.</div>`;return;} advance(); };
-    show();
-  }
-  function renderOptions(){
+  const answers=new Array(quiz.questions.length).fill(-1); let i=0;
+  const c=el(`<div class="card">
+    <div class="qhead"><h2 style="font-size:18px">${esc(quiz.title)}</h2><span id="pos" class="mut sm"></span></div>
+    <div class="progress"><div id="pbar"></div></div>
+    <div id="qzone"></div><div id="err"></div>
+    <div class="navbar"><button id="prev" class="btn sec">← Précédent</button>
+      <button id="next" class="btn">Suivant →</button></div></div>`);
+  app.innerHTML=""; app.appendChild(c);
+  const qzone=c.querySelector("#qzone"),pbar=c.querySelector("#pbar"),pos=c.querySelector("#pos"),
+        prev=c.querySelector("#prev"),next=c.querySelector("#next"),err=c.querySelector("#err");
+  const draw=()=>{
     const q=quiz.questions[i];
+    pbar.style.width=(i/quiz.questions.length*100)+"%";
+    pos.textContent=`Question ${i+1} / ${quiz.questions.length}`;
+    prev.disabled=(i===0);
+    next.textContent=(i===quiz.questions.length-1)?"Terminer ✓":"Suivant →";
     qzone.innerHTML=`<p class="q">${esc(q.q)}</p>`;
     q.options.forEach((o,idx)=>{
       const b=el(`<button class="opt ${answers[i]===idx?'sel':''}"><span class="lt">${"ABCD"[idx]}</span><span>${esc(o)}</span></button>`);
-      b.onclick=()=>{answers[i]=idx;renderOptions();}; qzone.appendChild(b);
+      b.onclick=()=>{answers[i]=idx;draw();}; qzone.appendChild(b);
     });
-  }
-  function show(){
+  };
+  prev.onclick=()=>{if(i>0){i--;draw();}};
+  next.onclick=async()=>{
+    if(answers[i]===-1){err.innerHTML=`<div class="err">Choisissez une réponse.</div>`;return;}
     err.innerHTML="";
-    pbar.style.width=(i/quiz.questions.length*100)+"%";
-    pos.textContent=`Question ${i+1} / ${quiz.questions.length}`;
-    next.textContent=(i===quiz.questions.length-1)?"Terminer ✓":"Valider →";
-    renderOptions();
-    leftMs=TIME*1000;
-    paint();
-    clearInterval(timer);
-    timer=setInterval(()=>{ leftMs-=100; paint(); if(leftMs<=0) advance(); },100);
-  }
-  function paint(){
-    const sLeft=Math.max(0,Math.ceil(leftMs/1000));
-    clock.textContent=sLeft;
-    const low=leftMs<=3000;
-    clock.classList.toggle("low",low); tfill.classList.toggle("low",low);
-    tfill.style.width=Math.max(0,leftMs/(TIME*1000)*100)+"%";
-  }
-  function advance(){
-    clearInterval(timer);
-    if(i<quiz.questions.length-1){ i++; show(); } else { submitAll(); }
-  }
-  async function submitAll(){
-    if(submitting) return; submitting=true;
-    app.innerHTML=""; app.appendChild(el(`<div class="card"><p class="mut">Envoi de vos réponses…</p></div>`));
-    try{
-      const d=await api("/api/quiz/"+quiz.id+"/submit",{method:"POST",body:JSON.stringify({answers})});
+    if(i<quiz.questions.length-1){i++;draw();return;}
+    if(answers.includes(-1)){err.innerHTML=`<div class="err">Répondez à toutes les questions avant de terminer.</div>`;return;}
+    next.disabled=true;
+    try{ const d=await api("/api/quiz/"+quiz.id+"/submit",{method:"POST",body:JSON.stringify({answers})});
       viewResult(d.result);
-    }catch(e){
-      submitting=false;
-      const c=el(`<div class="card"><div class="err">${esc(e.message)}</div>
-        <div class="navbar"><span></span><button class="btn" id="retry">Réessayer l'envoi</button></div></div>`);
-      app.innerHTML=""; app.appendChild(c);
-      c.querySelector("#retry").onclick=submitAll;
-    }
-  }
+    }catch(e){ err.innerHTML=`<div class="err">${esc(e.message)}</div>`; next.disabled=false; }
+  };
+  draw();
 }
 
 /* ---------- Result ---------- */

@@ -1,9 +1,7 @@
 # Quiz — Gestion de projet IA
 
 Application de quiz conteneurisée pour la formation « Gestion de projet IA »
-(support v1.0, 7 parties). 4 modules × 20 questions, **12 secondes par
-question** : à la fin du temps, la question suivante s'affiche automatiquement
-et aucun retour en arrière n'est possible. Même socle que le quiz
+(support v1.0, 7 parties). 4 modules × 20 questions. Même socle que le quiz
 « Conduite du changement » : comptes apprenants (username unique + mot de
 passe), **une seule tentative par quiz**, classement par quiz, et correction
 détaillée (score + bonnes réponses + explications) à la fin de chaque quiz.
@@ -22,7 +20,6 @@ détaillée (score + bonnes réponses + explications) à la fin de chaque quiz.
 - **Compte apprenant** : nom d'utilisateur unique + mot de passe (haché, jamais stocké en clair).
 - **Une tentative par quiz et par utilisateur** : une fois soumis, le quiz n'est plus rejouable (il affiche la correction).
 - **Classement par quiz** : tri par score puis par heure de passage (le plus rapide devant à score égal).
-- **Passage chronométré** : 12 s par question (compteur visible), avancement automatique à la fin du temps, question sans réponse comptée fausse, aucun retour en arrière ; le quiz se soumet après la dernière question.
 - **Correction** : à la fin, score sur 20 + pour chaque question la bonne réponse, votre réponse, et l'explication.
 - **Qualité des questions** : 4 choix, 1 seul correct ; répartition équilibrée A/B/C/D (motif différent du quiz adoption) ; la bonne réponse n'est jamais la plus longue ; distracteurs plausibles du même registre que la bonne réponse (vérifié par `check_questions.py`).
 
